@@ -123,7 +123,6 @@ study_data <-
     names = list.files("Dataset/lda_data")) %>% 
   mutate(file_names = str_c("Dataset/lda_data/" , names)) %>% 
   mutate(content = map(.x = file_names, ~read_csv(.x))) %>% 
-  unnest(content) %>% 
   select(-file_names)
 study_data
 ```
@@ -133,7 +132,8 @@ Next, we need to tidy the dataset:
 
 ```{r}
 study_data_tidy <-
-  study_data %>% 
+  study_data %>%
+    unnest(content) %>% 
   separate(names,
            into = c("arm","subject_id"),
            sep = "_") %>% 
@@ -145,12 +145,24 @@ study_data_tidy <-
   mutate(subject_id = as.numeric(subject_id)) %>% 
   pivot_longer(week_1:week_8,
                names_to = "week",
-               values_to = "value",
+               values_to = "observation",
                names_prefix = "week_") %>% 
   mutate(week = as.numeric(week))
 study_data_tidy
 ```
 
+## Spaghetti plot 
+
+```{r}
+study_data_tidy %>%
+  mutate(subject_id = as.factor(subject_id)) %>% 
+  ggplot(aes(x = week, y = observation, color = subject_id)) +
+  geom_point() +
+  geom_line() +
+  facet_grid(~arm)
+```
+
+From the plot, we can see that, there are different pattern between the control group and the expose group. For the control group, the observation tend to be fluctuate around 1.25 for 8 weeks. For the expose group, there is an increasing trend of the observation over time. 
 
 # Question 3:
 
