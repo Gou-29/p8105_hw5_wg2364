@@ -133,7 +133,7 @@ Next, we need to tidy the dataset:
 ```{r}
 study_data_tidy <-
   study_data %>%
-    unnest(content) %>% 
+  unnest(content) %>% 
   separate(names,
            into = c("arm","subject_id"),
            sep = "_") %>% 
@@ -165,4 +165,56 @@ study_data_tidy %>%
 From the plot, we can see that, there are different pattern between the control group and the expose group. For the control group, the observation tend to be fluctuate around 1.25 for 8 weeks. For the expose group, there is an increasing trend of the observation over time. 
 
 # Question 3:
+
+## The main function for the simulation:
+
+```{r}
+set.seed(429)
+
+simulation_ <- function(mu, sd = 5, sample_size = 30, iteration = 5000){
+  df <- 
+    tibble(
+    sample_id = 1:iteration,
+    sample_data = rerun(iteration, rnorm(n = sample_size, mean = mu, sd = sd)))
+  df <- 
+    df %>% 
+    mutate(ttest = map(.x = sample_data, ~t.test(.x, mu = mu))) %>% 
+    mutate(ttidy = map(.x = ttest, ~broom::tidy(.x))) %>% 
+    select(sample_id, ttidy) %>%
+    unnest(ttidy) %>% 
+    select(sample_id, estimate, p.value) %>% 
+    mutate(decision = case_when(
+      p.value < 0.05 ~ "Reject",
+      p.value >= 0.05 ~ "Fail to Reject"
+    ))
+  return(df)
+}
+```
+
+## Simulation on mean equal to 0:
+```{r}
+simulation_(0)
+```
+
+## Simulation on multiple means:
+
+```{r}
+simulation_prop_ <- function(simulation_result){
+  output <- 
+    simulation_result %>% 
+    pull(decision)
+  return(sum(output== "Reject")/nrow(simulation_result))
+}
+
+Data <- tibble(
+  mu = 1:6
+)
+
+Data <-
+  Data %>% 
+  mutate(raw_data = map(.x = mu, ~simulation_(.x))) %>% 
+  mutate(proportion = map(.x = raw_data, ~simulation_prop_(.x))) %>% 
+  unnest(proportion)
+```
+
 
