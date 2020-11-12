@@ -78,12 +78,37 @@ prop_test_ <- function(tibble_input){
                .x = proptest, 
                ~broom::tidy(.x))) %>% 
     select(-proptest) %>% 
-    unnest(tidytest)
+    unnest(tidytest) %>% 
+    select(city_state, estimate, conf.low, conf.high)
   return(tibble_output)
 }
 ```
 
 Then, for Baltimore, MD
+```{r}
+homocide_summary %>%
+  filter(city_state == "Baltimore_MD") %>%
+  prop_test_(.) 
+```
+
+## Run the test for all the city:
+```{r}
+homocide_result <-
+  homocide_summary %>% 
+  prop_test_(.)
+homocide_result
+```
+
+## The plot:
+```{r}
+homocide_result %>% 
+  mutate(city_state = fct_reorder(city_state, estimate)) %>% 
+  filter(city_state != "Tulsa_AL") %>%   #Poor data with just 1 case
+  ggplot(aes(x = city_state, y = estimate)) +
+  geom_point() + 
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high)) + 
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+```
 
 
 # Question 2:
