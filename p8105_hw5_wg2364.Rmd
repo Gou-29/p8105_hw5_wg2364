@@ -113,5 +113,44 @@ homocide_result %>%
 
 # Question 2:
 
+## Read and tidy the data:
+
+We can read the data by maps:
+
+```{r}
+study_data <- 
+  tibble(
+    names = list.files("Dataset/lda_data")) %>% 
+  mutate(file_names = str_c("Dataset/lda_data/" , names)) %>% 
+  mutate(content = map(.x = file_names, ~read_csv(.x))) %>% 
+  unnest(content) %>% 
+  select(-file_names)
+study_data
+```
+
+
+Next, we need to tidy the dataset:
+
+```{r}
+study_data_tidy <-
+  study_data %>% 
+  separate(names,
+           into = c("arm","subject_id"),
+           sep = "_") %>% 
+  mutate(arm = case_when(
+    arm == "con" ~ "Control",
+    arm == "exp" ~ "Expose"
+  )) %>% 
+  mutate(subject_id = str_extract(subject_id, "^\\d{2}")) %>% 
+  mutate(subject_id = as.numeric(subject_id)) %>% 
+  pivot_longer(week_1:week_8,
+               names_to = "week",
+               values_to = "value",
+               names_prefix = "week_") %>% 
+  mutate(week = as.numeric(week))
+study_data_tidy
+```
+
+
 # Question 3:
 
