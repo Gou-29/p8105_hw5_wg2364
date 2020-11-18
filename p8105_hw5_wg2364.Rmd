@@ -159,7 +159,8 @@ study_data_tidy %>%
   ggplot(aes(x = week, y = observation, color = subject_id)) +
   geom_point() +
   geom_line() +
-  facet_grid(~arm)
+  facet_grid(~arm) +
+  ggtitle("Spaghetti plot of different group")
 ```
 
 From the plot, we can see that, there are different pattern between the control group and the expose group. For the control group, the observation tend to be fluctuate around 1.25 for 8 weeks. For the expose group, there is an increasing trend of the observation over time. 
@@ -178,7 +179,7 @@ simulation_ <- function(mu, sd = 5, sample_size = 30, iteration = 5000){
     sample_data = rerun(iteration, rnorm(n = sample_size, mean = mu, sd = sd)))
   df <- 
     df %>% 
-    mutate(ttest = map(.x = sample_data, ~t.test(.x, mu = mu))) %>% 
+    mutate(ttest = map(.x = sample_data, ~t.test(.x, mu = 0))) %>% 
     mutate(ttidy = map(.x = ttest, ~broom::tidy(.x))) %>% 
     select(sample_id, ttidy) %>%
     unnest(ttidy) %>% 
@@ -220,7 +221,7 @@ Data <-
 
 ## Plots:
 
-Plot A: Make a plot showing the proportion of times the null was rejected (the power of the test) on the y axis and the true value of on the x axis. 
+### Plot A: Make a plot showing the proportion of times the null was rejected (the power of the test) on the y axis and the true value of on the x axis. 
 
 
 ```{r}
@@ -228,19 +229,18 @@ Data %>%
   select(-raw_data) %>% 
   ggplot(aes(x = mu, y = proportion)) +
   geom_line() +
-  ylim(c(0.04,0.06)) + 
+  geom_point() +
   ggtitle("Relationship between effect size and power")
 
 ```
 
 Comments:
 
-In general, there is no association between the true value of $\mu$ and the power of the test. This is because, according to the CLT, for a fixed sample size (n = 30 in this case), the distribution of the sample mean will follow this normal distribution:
+We can see that as the _mu_ increasing, the proportion of rejection will increasing too. This is because, according to the central limit theorem (CLT), for a fixed sample size (n = 30 in this case), the distribution of the sample mean will follow a normal distribution with _mu_ = mean we set and _sd_ = _sigma/sqrt(n)_
 
-$$\hat\mu \sim N(\mu,\sigma / \sqrt{30})$$
-So, under a fixed significance level, proportion of times the null was rejected will equal to the significance level.
+So, under a fixed significance level, proportion of times the null was rejected will increase as the peak of the (normal) distribution of sample mean will moving leftward. This will give a  bigger intersection are with the rejection area of the null hypothesis.  
 
-Plot B: Make a plot showing the average estimate of $\hat\mu$ on the y axis and the true value of $\mu$ on the x axis. Make a second plot (or overlay on the first) the average estimate of $\hat\mu$ only in samples for which the null was rejected on the y axis and the true value of on the x axis
+### Plot B: Make a plot showing the average estimate of _mu_ on the y axis and the true value of _mu_ on the x axis. Make a second plot (or overlay on the first) the average estimate of _mu_ only in samples for which the null was rejected on the y axis and the true value of on the x axis
 
 ```{r}
 total_mean_estimation <-
@@ -267,9 +267,11 @@ left_join(total_mean_estimation, reject_mean_estimation) %>%
                names_to = "group",
                values_to = "estimation") %>% 
   ggplot(aes(x = mu, y = estimation, group = group)) +
-  geom_line(aes(color = group))
+  geom_point(aes(color = group)) +
+  geom_line(aes(color = group)) +
+  ggtitle("Simulation difference among two groups")
 ```
 
 Comments:
 
-In general, we can see that there are no significant difference of estimation between two groups. Again, it can be explained by the CLT as they all follow an identical distribution. 
+In general, we can see that as the _mu_ increase, the divergent of these two sets will be narrower. Also, we notice that the total mean is approximately equal to the true _mu_. Again, this is result from CLT and as the _mu_ increase, the distribution of sample mean will follows a normal distribution with increasing _mu_ and the proportion of rejection (H_0: _mu_ = 0) will get bigger. 
