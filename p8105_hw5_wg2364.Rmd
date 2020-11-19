@@ -208,7 +208,7 @@ simulation_prop_ <- function(simulation_result){
 }
 
 Data <- tibble(
-  mu = 1:6
+  mu = 0:6
 )
 
 Data <-
@@ -274,4 +274,4 @@ left_join(total_mean_estimation, reject_mean_estimation) %>%
 
 Comments:
 
-In general, we can see that as the _mu_ increase, the divergent of these two sets will be narrower. Also, we notice that the total mean is approximately equal to the true _mu_. Again, this is result from CLT and as the _mu_ increase, the distribution of sample mean will follows a normal distribution with increasing _mu_ and the proportion of rejection (H_0: _mu_ = 0) will get bigger. 
+In general, we can see that as the _mu_ increase, the divergent of these two sets will increase first and be narrower. Also, we notice that the total mean is approximately equal to the true _mu_. Again, this is result from CLT and as the _mu_ increase, the distribution of sample mean will follows a normal distribution with increasing _mu_ and the proportion of rejection (H_0: _mu_ = 0) will get bigger. Also, this reflect the trade-off between the power of the test and the number of sub-samples in the rejection group (they share the same distribution)
